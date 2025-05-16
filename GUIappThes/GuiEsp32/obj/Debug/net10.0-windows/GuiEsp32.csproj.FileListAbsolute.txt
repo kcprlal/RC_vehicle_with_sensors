@@ -1,0 +1,14 @@
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\bin\Debug\net10.0-windows\GuiEsp32.exe
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\bin\Debug\net10.0-windows\GuiEsp32.deps.json
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\bin\Debug\net10.0-windows\GuiEsp32.runtimeconfig.json
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\bin\Debug\net10.0-windows\GuiEsp32.dll
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\bin\Debug\net10.0-windows\GuiEsp32.pdb
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.AssemblyInfoInputs.cache
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.AssemblyInfo.cs
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.csproj.CoreCompileInputs.cache
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.dll
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\refint\GuiEsp32.dll
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.pdb
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\GuiEsp32.genruntimeconfig.cache
+C:\Users\trist\vsc\GUIappThes\GuiEsp32\obj\Debug\net10.0-windows\ref\GuiEsp32.dll
