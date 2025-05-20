@@ -13,7 +13,7 @@ namespace kl
         bool write(uint8_t, uint8_t, uint8_t);
         bool write(uint8_t, const uint8_t *, uint8_t);
         bool read(uint8_t, uint8_t, uint8_t *);
-        bool read(u_int8_t, const uint8_t *, uint8_t, uint8_t *, uint8_t);
+        bool read(uint8_t, const uint8_t *, uint8_t, uint8_t *, uint8_t);
         bool ping(uint8_t);
 
     private:

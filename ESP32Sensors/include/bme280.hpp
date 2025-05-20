@@ -28,10 +28,10 @@ namespace kl
         uint32_t press, hum;
         // metody do pomiarow
         void readCalibrations();
-        void readPTH(int32_t &temp, int32_t &press, int32_t &hum);
-        int32_t compensateTemperature(int32_t adc_T);
-        uint32_t compensatePressure(int32_t adc_P);
-        uint32_t compensateHumidity(int32_t adc_H);
+        void readPTH();
+        int32_t compensateTemperature();
+        uint32_t compensatePressure();
+        uint32_t compensateHumidity();
 
         // Stałe adresy rejestrów
         static constexpr uint8_t PRESS_MSB = 0xf7;
@@ -70,9 +70,9 @@ namespace kl
         static constexpr uint8_t I2C_ADDR = 0x76;
 
         // Pomocnicze metody (do odczytu z rejestrów itd.)
-        void readRegister(uint8_t reg, uint8_t *data);
-        void writeRegister(uint8_t reg, uint8_t value);
-        void readRegisters(uint8_t reg, uint8_t *buffer, uint8_t length);
+        bool readRegister(uint8_t, uint8_t *);
+        bool writeRegister(uint8_t, uint8_t);
+        bool readRegisters(uint8_t, uint8_t *, uint8_t);
     };
 }
 #endif // _BME280_H

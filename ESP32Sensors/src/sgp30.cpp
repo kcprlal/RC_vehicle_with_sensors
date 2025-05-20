@@ -19,18 +19,10 @@ namespace kl
 
     bool SGP30::begin()
     {
-        if (!softReset())
-            return false;
-        delay(10);
         if (!writeCommand(IAQ_INIT))
             return false;
         delay(10);
         return true;
-    }
-
-    bool SGP30::softReset()
-    {
-        return writeCommand(SOFT_RESET);
     }
 
     bool SGP30::measureAQ()

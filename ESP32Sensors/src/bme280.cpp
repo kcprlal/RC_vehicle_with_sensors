@@ -33,7 +33,6 @@ namespace kl
 		readRegister(ADDR_DIG_T3, &utempdig);
 		dig_T3 |= utempdig;
 
-		// P1..P9
 		const uint8_t calib[] = {
 			ADDR_DIG_P1, ADDR_DIG_P2, ADDR_DIG_P3, ADDR_DIG_P4,
 			ADDR_DIG_P5, ADDR_DIG_P6, ADDR_DIG_P7, ADDR_DIG_P8, ADDR_DIG_P9};
@@ -48,18 +47,14 @@ namespace kl
 			*calibVars[i] |= utempdig;
 		}
 
-		// H1
 		readRegister(ADDR_DIG_H1, &dig_H1);
 
-		// H2
 		uint8_t buf[2];
 		readRegisters(ADDR_DIG_H2, buf, 2);
 		dig_H2 = (int16_t)(buf[1] << 8 | buf[0]);
 
-		// H3
 		readRegister(ADDR_DIG_H3, &dig_H3);
 
-		// H4, H5
 		uint8_t e4, e5, e6;
 		readRegister(ADDR_DIG_H4, &e4);
 		readRegister(ADDR_DIG_H5, &e5);
@@ -74,13 +69,13 @@ namespace kl
 
 	void BME280::makeMeasurement()
 	{
-		readPTH(adc_T, adc_P, adc_H);
-		press = compensatePressure(adc_P);
-		temp = compensateTemperature(adc_T);
-		hum = compensateHumidity(adc_H);
+		readPTH();
+		press = compensatePressure();
+		temp = compensateTemperature();
+		hum = compensateHumidity();
 	}
 
-	void BME280::readPTH(int32_t &temp, int32_t &press, int32_t &hum)
+	void BME280::readPTH()
 	{
 		uint8_t msb, lsb, xlsb;
 
@@ -105,7 +100,7 @@ namespace kl
 		hum = adc_H;
 	}
 
-	int32_t BME280::compensateTemperature(int32_t adc_T)
+	int32_t BME280::compensateTemperature()
 	{
 		int32_t var1, var2, T;
 		var1 = (((adc_T >> 3) - ((int32_t)dig_T1 << 1)) * ((int32_t)dig_T2)) >> 11;
@@ -119,7 +114,7 @@ namespace kl
 		return T;
 	}
 
-	uint32_t BME280::compensatePressure(int32_t adc_P)
+	uint32_t BME280::compensatePressure()
 	{
 		int64_t var1, var2, p;
 		var1 = ((int64_t)t_fine) - 128000;
@@ -140,7 +135,7 @@ namespace kl
 		return (uint32_t)p / 25600;
 	}
 
-	uint32_t BME280::compensateHumidity(int32_t adc_H)
+	uint32_t BME280::compensateHumidity()
 	{
 		int32_t v_x1_u32r = t_fine - 76800;
 		v_x1_u32r = (((((adc_H << 14) - (((int32_t)dig_H4) << 20) -
@@ -162,23 +157,25 @@ namespace kl
 		return (uint32_t)(v_x1_u32r >> 12);
 	}
 
-	// --- Helper functions ---
-
-	void BME280::readRegister(uint8_t reg, uint8_t *data)
+	bool BME280::readRegister(uint8_t reg, uint8_t *data)
 	{
-		i2c.read(I2C_ADDR, reg, data);
+		return i2c.read(I2C_ADDR, reg, data);
 	}
 
-	void BME280::writeRegister(uint8_t reg, uint8_t value)
+	bool BME280::writeRegister(uint8_t reg, uint8_t value)
 	{
-		i2c.write(I2C_ADDR, reg, value);
+		return i2c.write(I2C_ADDR, reg, value);
 	}
 
-	void BME280::readRegisters(uint8_t reg, uint8_t *buffer, uint8_t length)
+	bool BME280::readRegisters(uint8_t reg, uint8_t *buffer, uint8_t length)
 	{
 		for (uint8_t i = 0; i < length; ++i)
 		{
-			i2c.read(I2C_ADDR, reg + i, &buffer[i]);
+			if (!i2c.read(I2C_ADDR, reg + i, &buffer[i]))
+			{
+				return false;
+			}
 		}
+		return true;
 	}
 }

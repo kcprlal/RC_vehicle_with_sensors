@@ -1,5 +1,5 @@
-#define CUSTOM
-#if defined(CUSTOM)
+#ifndef _CAMERA_PINS_H
+#define _CAMERA_PINS_H
 #define PWDN_GPIO_NUM  32
 #define RESET_GPIO_NUM -1
 #define XCLK_GPIO_NUM  0
