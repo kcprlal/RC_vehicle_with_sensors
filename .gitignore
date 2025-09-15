@@ -24,3 +24,5 @@ GUIappThes/GuiEsp32/obj
 GUIappThes/GuiEsp32/global.json
 GUIappThes/GuiEsp32/GuiEsp32*
 GUIappThes/GUIappThes.sln
+
+.gitignore
