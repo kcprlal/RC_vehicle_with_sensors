@@ -6,12 +6,13 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v9.0": {
-      "GuiEsp32/1.0.0": {
+      "ESPGUI/1.0.0": {
         "dependencies": {
+          "SharpDX": "4.2.0",
           "SharpDX.XInput": "4.2.0"
         },
         "runtime": {
-          "GuiEsp32.dll": {}
+          "ESPGUI.dll": {}
         }
       },
       "Microsoft.NETCore.Platforms/1.1.0": {},
@@ -706,7 +707,7 @@
     }
   },
   "libraries": {
-    "GuiEsp32/1.0.0": {
+    "ESPGUI/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

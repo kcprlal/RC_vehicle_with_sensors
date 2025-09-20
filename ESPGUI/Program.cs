@@ -1,4 +1,4 @@
-namespace GuiEsp32;
+namespace ESPGUI;
 
 static class Program
 {

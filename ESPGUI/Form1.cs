@@ -4,7 +4,7 @@ using System.Text.Json;
 using SharpDX.XInput;
 
 
-namespace GuiEsp32;
+namespace ESPGUI;
 
 public partial class Form1 : Form
 {
@@ -15,19 +15,39 @@ public partial class Form1 : Form
     private bool isStopped = false;
     private bool previousYPressed = false;
     private TcpListener server;
-
+    private Button buttonStart, buttonStop;
     public Form1()
     {
         InitializeComponent();
         StartServer();
         controller = new Controller(UserIndex.One);
-
+        this.BackColor = Color.Gray;
 
         pictureBoxCam = new PictureBox();
-        pictureBoxCam.Location = new Point(500, 50);
+        pictureBoxCam.Location = new Point(500, 100);
         pictureBoxCam.Size = new Size(320, 240);
         pictureBoxCam.SizeMode = PictureBoxSizeMode.StretchImage;
+        pictureBoxCam.BackColor = Color.Aqua;
         Controls.Add(pictureBoxCam);
+
+        buttonStart = new Button
+        {
+            Text = "Start",
+            Dock = DockStyle.Top,
+            Height = 40
+        };
+        //buttonStart.Click += ButtonStart_Click;
+
+        buttonStop = new Button
+        {
+            Text = "Stop",
+            Dock = DockStyle.Top,
+            Height = 40
+        };
+        //buttonStop.Click += ButtonStop_Click;
+
+        this.Controls.Add(buttonStop);
+        this.Controls.Add(buttonStart);
 
         labelTemp = new Label();
         labelTemp.Location = new Point(50, 50);
@@ -78,12 +98,6 @@ public partial class Form1 : Form
         labelstate.Text = "State: off";
         Controls.Add(labelstate);
 
-        //timer odpowiedizalny za obraz z kamerki
-        // snapshotTimer = new System.Windows.Forms.Timer();
-        // snapshotTimer.Interval = 100;
-        // snapshotTimer.Tick += async (s, e) => await UpdateCameraSnapshot(espCamURL);
-        // snapshotTimer.Start();
-
         //timer odpowiedzialny za sterowanie padem
         controlTimer = new System.Windows.Forms.Timer();
         controlTimer.Interval = 50;
@@ -91,28 +105,105 @@ public partial class Form1 : Form
         controlTimer.Start();
 
         //_ = GetDataFromHttp(espSensorURL);
+        //StartCameraUdp(12345);
+        var receiver = new UdpReceiver(1234, pictureBoxCam);
     }
 
     //streaming
 
-    // private async Task UpdateCameraSnapshot(string url)
-    // {
-    //     try
-    //     {
-    //         using (HttpClient client = new HttpClient())
-    //         {
-    //             var imageBytes = await client.GetByteArrayAsync(url);
-    //             using (var ms = new MemoryStream(imageBytes))
-    //             {
-    //                 pictureBoxCam.Image = Image.FromStream(ms);
-    //             }
-    //         }
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Console.WriteLine("Błąd pobierania obrazu: " + ex.Message);
-    //     }
-    // }
+    private CancellationTokenSource _cancellationTokenSource;
+
+    private void buttonStart_Click(object sender, EventArgs e)
+    {
+        StartCameraUdp(12345); // port musi się zgadzać z ESP32-CAM
+    }
+
+    private void buttonStop_Click(object sender, EventArgs e)
+    {
+        StopCameraUdp();
+    }
+
+    private void StartCameraUdp(int port)
+    {
+        _cancellationTokenSource = new CancellationTokenSource();
+        Task.Run(() => ReceiveUdpStream(port, _cancellationTokenSource.Token));
+    }
+
+    private void StopCameraUdp()
+    {
+        _cancellationTokenSource?.Cancel();
+    }
+
+    private void ReceiveUdpStream(int port, CancellationToken token)
+    {
+        UdpClient udpClient = new UdpClient(port);
+        udpClient.Client.ReceiveTimeout = 2000;
+
+        Dictionary<int, byte[]> packetBuffer = new Dictionary<int, byte[]>();
+        int totalPackets = 0;
+
+        IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
+
+        while (true)
+        {
+            try
+            {
+                byte[] data = udpClient.Receive(ref remoteEP);
+
+                if (data.Length < 16) continue;
+
+                // Parsowanie nagłówka
+                int index = BitConverter.ToInt32(data, 0);
+                int total = BitConverter.ToInt32(data, 8);
+                byte[] payload = new byte[data.Length - 16];
+                Buffer.BlockCopy(data, 16, payload, 0, payload.Length);
+
+                if (totalPackets == 0 || total != totalPackets)
+                {
+                    packetBuffer.Clear();
+                    totalPackets = total;
+                }
+
+                packetBuffer[index] = payload;
+
+                // Jeśli mamy komplet
+                if (packetBuffer.Count == totalPackets)
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        for (int i = 0; i < totalPackets; i++)
+                        {
+                            if (packetBuffer.ContainsKey(i))
+                                ms.Write(packetBuffer[i], 0, packetBuffer[i].Length);
+                        }
+
+                        packetBuffer.Clear();
+                        totalPackets = 0;
+
+                        try
+                        {
+                            Image img = Image.FromStream(ms);
+                            pictureBoxCam.Invoke((Action)(() =>
+                            {
+                                pictureBoxCam.Image = img;
+                            }));
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch (SocketException)
+            {
+                // Timeout – pozwala sprawdzać token i zamknąć czysto
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Błąd UDP: " + ex.Message);
+            }
+        }
+
+        udpClient.Close();
+    }
 
 
 
@@ -120,7 +211,7 @@ public partial class Form1 : Form
     // {
     //     var client = server.AcceptTcpClient();
 
-        
+
     // }
 
     private async void ControlTimer_Tick(object sender, EventArgs e)
@@ -160,7 +251,7 @@ public partial class Form1 : Form
     });
     }
 
-     private async Task HandleClient(TcpClient client)
+    private async Task HandleClient(TcpClient client)
     {
         using var reader = new StreamReader(client.GetStream());
 
