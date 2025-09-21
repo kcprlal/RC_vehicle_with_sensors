@@ -12,7 +12,7 @@
 #define PWMB 4
 
 WiFiUDP udp;
-const int UDP_PORT = 4210;
+const int UDP_PORT = 50002;
 
 char incomingPacket[50];
 
@@ -22,6 +22,7 @@ IPAddress subnet(255, 255, 255, 0);
 
 void setup() {
 
+  Serial.begin(115200);
   // Konfiguracja pinów silników
   pinMode(AIN1, OUTPUT);
   pinMode(AIN2, OUTPUT);
@@ -51,6 +52,7 @@ void loop() {
 
     int speedA, speedB, dirA, dirB;
     int parsed = sscanf(incomingPacket, "%d,%d,%d,%d", &speedA, &speedB, &dirA, &dirB);
+    Serial.println(incomingPacket);
     if (parsed == 4) {
       // Ustaw kierunki i prędkości
       digitalWrite(AIN1, dirA == 1);
@@ -60,6 +62,7 @@ void loop() {
 
       analogWrite(PWMA, constrain(speedA, 0, 255));
       analogWrite(PWMB, constrain(speedB, 0, 255));
+
     } else {
       //error handling
     }

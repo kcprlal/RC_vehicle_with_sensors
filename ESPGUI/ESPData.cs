@@ -1,11 +1,11 @@
 public class EspData
-    {
-        public float Temperature { get; set; }
-        public float Pressure { get; set; }
-        public float Humidity { get; set; }
-        public float Eco2 { get; set; }
-        public float Tvoc { get; set; }
-        public float Ax { get; set; }
-        public float Ay { get; set; }
-        public float Az { get; set; }
-    }
+{
+    public float pressure { get; set; }
+    public float temperature { get; set; }
+    public float humidity { get; set; }
+    public float ax { get; set; }
+    public float ay { get; set; }
+    public float az { get; set; }
+    public float eco2 { get; set; }
+    public float tvoc { get; set; }
+}

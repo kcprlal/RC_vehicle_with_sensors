@@ -19,7 +19,7 @@ const unsigned long measurementInterval = 1000; // 1 sekunda
 IPAddress local_IP(192, 168, 137, 51);
 IPAddress gateway(192, 168, 137, 1);
 IPAddress subnet(255, 255, 255, 0);
-const int port = 5000;
+const int port = 50001;
 const char *host = "192.168.137.1";
 
 typedef struct SensorData
@@ -38,11 +38,14 @@ std::string fillPayload(bool, std::string);
 
 void setup()
 {
+  Serial.begin(115200);
   WiFi.config(local_IP, gateway, subnet);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   while (WiFi.status() != WL_CONNECTED)
+  {
     delay(500);
+  }
   client.connect(host, port);
 
   i2c.begin();
@@ -96,7 +99,9 @@ void loop()
       client.print(fillPayload(true, "none").c_str());
     }
     else
+    {
       client.connect(host, port);
+    }
   }
 }
 
