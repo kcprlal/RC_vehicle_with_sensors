@@ -17,7 +17,6 @@ namespace kl
 
 	void BME280::readCalibrations()
 	{
-		// T1
 		readRegister(ADDR_DIG_T1 + 1, &utempdig);
 		dig_T1 = (uint16_t)utempdig << 8;
 		readRegister(ADDR_DIG_T1, &utempdig);
@@ -58,11 +57,10 @@ namespace kl
 		uint8_t e4, e5, e6;
 		readRegister(ADDR_DIG_H4, &e4);
 		readRegister(ADDR_DIG_H5, &e5);
-		readRegister(ADDR_DIG_H5 + 1, &e6); // addr 0xE6
+		readRegister(ADDR_DIG_H5 + 1, &e6);
 		dig_H4 = (int16_t)((e4 << 4) | (e5 & 0x0F));
 		dig_H5 = (int16_t)((e6 << 4) | (e5 >> 4));
 
-		// H6
 		readRegister(ADDR_DIG_H6, &utempdig);
 		dig_H6 = (int8_t)utempdig;
 	}

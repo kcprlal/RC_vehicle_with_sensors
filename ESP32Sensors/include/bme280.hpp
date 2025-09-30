@@ -75,4 +75,4 @@ namespace kl
         bool readRegisters(uint8_t, uint8_t *, uint8_t);
     };
 }
-#endif // _BME280_H
+#endif

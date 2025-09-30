@@ -5,16 +5,20 @@
 #include "adxl345.hpp"
 #include <WiFi.h>
 #include "wificredentials.hpp"
+#include "as5600.hpp"
 
 kl::I2C i2c;
 kl::BME280 bme280;
 kl::SGP30 sgp30;
 kl::ADXL345 adxl345;
+kl::AS5600 as5600;
 
 WiFiClient client;
 
 unsigned long lastMeasurementTime = 0;
+unsigned long as5600LastMSTime = 0;
 const unsigned long measurementInterval = 1000; // 1 sekunda
+const unsigned long as5600Interval = 20;
 
 IPAddress local_IP(192, 168, 137, 51);
 IPAddress gateway(192, 168, 137, 1);
@@ -53,9 +57,16 @@ void setup()
 
   if (!adxl345.begin())
   {
+    fillPayload(false, "adxl begin error");
   }
   if (!adxl345.setRange(2))
   {
+    fillPayload(false, "adxl set range error");
+  }
+
+  if (!as5600.begin())
+  {
+    fillPayload(false, "as5600 error");
   }
 
   bme280.makeMeasurement();
@@ -72,6 +83,34 @@ void loop()
 {
   static int i = 0;
   unsigned long currentMillis = millis();
+  unsigned long currentMillisAS5600 = millis();
+
+  if (currentMillisAS5600 - as5600LastMSTime >= as5600Interval)
+  {
+    as5600LastMSTime = currentMillisAS5600;
+    uint8_t status = as5600.magnetStatus();
+    if (status == 0xFF)
+    {
+      Serial.println("I2C read error");
+    }
+    else
+    {
+      if (status & 0x20)
+      {
+        Serial.println("Magnet detected");
+        float angle = as5600.getAngleDegrees();
+        Serial.printf("Angle: %.2f deg\n", angle);
+      }
+      if (status & 0x10)
+      {
+        Serial.println("Magnet too weak");
+      }
+      if (status & 0x08)
+      {
+        Serial.println("Magnet too strong");
+      }
+    }
+  }
 
   if (currentMillis - lastMeasurementTime >= measurementInterval)
   {
@@ -84,7 +123,6 @@ void loop()
       sgp30.measureAQ();
     }
     i++;
-
     sensorPayload.pressure = bme280.getPress();
     sensorPayload.temperature = float(bme280.getTemp()) / 100;
     sensorPayload.humidity = float(bme280.getHum()) / 1024;
