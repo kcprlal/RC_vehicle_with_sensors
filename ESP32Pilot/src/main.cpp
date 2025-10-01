@@ -23,7 +23,6 @@ IPAddress subnet(255, 255, 255, 0);
 void setup() {
 
   Serial.begin(115200);
-  // Konfiguracja pinów silników
   pinMode(AIN1, OUTPUT);
   pinMode(AIN2, OUTPUT);
   pinMode(BIN1, OUTPUT);
@@ -34,13 +33,11 @@ void setup() {
   digitalWrite(STBY, HIGH);  // włącz sterowanie
 
   WiFi.config(local_IP, gateway, subnet);
-  // Połącz z siecią WiFi (laptop jako AP)
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
-  // Start nasłuchiwania UDP
   udp.begin(UDP_PORT);
 }
 
@@ -54,7 +51,6 @@ void loop() {
     int parsed = sscanf(incomingPacket, "%d,%d,%d,%d", &speedA, &speedB, &dirA, &dirB);
     Serial.println(incomingPacket);
     if (parsed == 4) {
-      // Ustaw kierunki i prędkości
       digitalWrite(AIN1, dirA == 1);
       digitalWrite(AIN2, dirA == 0);
       digitalWrite(BIN1, dirB == 1);
