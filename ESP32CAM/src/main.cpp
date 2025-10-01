@@ -11,7 +11,7 @@ const char *password = WIFI_PASSWORD;
 kl::Esp32cam cam(20000000, PIXFORMAT_JPEG, FRAMESIZE_QVGA, 2, 15);
 
 WiFiUDP udp;
-const char *udpAddress = "192.168.137.1"; // IP komputera odbierającego
+const char *udpAddress = "192.168.137.1"; 
 const int udpPort = 1234;
 
 void setup()
@@ -48,11 +48,9 @@ void loop()
 
     udp.beginPacket(udpAddress, udpPort);
 
-    // nagłówek: numer pakietu + ile ich będzie
     udp.write((uint8_t *)&i, sizeof(i));
     udp.write((uint8_t *)&totalPackets, sizeof(totalPackets));
 
-    // dane JPEG
     udp.write(fb->buf + i * packetSize, chunkSize);
 
     udp.endPacket();
@@ -60,6 +58,6 @@ void loop()
   }
 
   esp_camera_fb_return(fb);
-  delay(100); // FPS ~20
+  delay(100);
 }
 
