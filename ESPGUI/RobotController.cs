@@ -38,7 +38,6 @@ class RobotController
         // Sprawdzamy martwą strefę joysticka
         if (RT < 10 && LT < 10)
         {
-            // Jeśli joystick jest w neutralnej pozycji → STOP
             string stopCommand = "0,0,0,0";
             byte[] stopData = Encoding.ASCII.GetBytes(stopCommand);
             await udpClient.SendAsync(stopData, stopData.Length, remoteEndPoint);
@@ -67,7 +66,6 @@ class RobotController
         else if (Xnormalized < -0.1f) // w lewo
             speedA = Math.Max(0, speedA - (int)(-Xnormalized * 255));
 
-        // Wysyłamy pakiet
         string command = $"{speedA},{speedB},{dirA},{dirB}";
         com = $"{speedA},   {speedB}";
         byte[] data = Encoding.ASCII.GetBytes(command);
