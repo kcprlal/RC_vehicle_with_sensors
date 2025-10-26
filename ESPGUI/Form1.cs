@@ -46,7 +46,7 @@ public partial class Form1 : Form
 
     private void buttonStart_Click(object sender, EventArgs e)
     {
-        StartCameraUdp(12345); // port musi się zgadzać z ESP32-CAM
+        StartCameraUdp(12345);
     }
 
     private void buttonStop_Click(object sender, EventArgs e)
@@ -83,7 +83,6 @@ public partial class Form1 : Form
 
                 if (data.Length < 16) continue;
 
-                // Parsowanie nagłówka
                 int index = BitConverter.ToInt32(data, 0);
                 int total = BitConverter.ToInt32(data, 8);
                 byte[] payload = new byte[data.Length - 16];
@@ -97,7 +96,6 @@ public partial class Form1 : Form
 
                 packetBuffer[index] = payload;
 
-                // Jeśli mamy komplet
                 if (packetBuffer.Count == totalPackets)
                 {
                     using (MemoryStream ms = new MemoryStream())
@@ -123,17 +121,17 @@ public partial class Form1 : Form
                     }
                 }
             }
-            catch (SocketException)
+            catch (SocketException ex)
             {
-                // Timeout – pozwala sprawdzać token i zamknąć czysto
+                Log("Socket error: " + ex.Message);
+                udpClient.Close();
             }
             catch (Exception ex)
             {
-                Log("Błąd UDP: " + ex.Message);
+                Log("udp error: " + ex.Message);
+                udpClient.Close();
             }
         }
-
-        udpClient.Close();
     }
 
 

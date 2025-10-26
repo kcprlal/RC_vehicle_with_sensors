@@ -1,11 +1,16 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include "bme280.hpp"
 #include "sgp30.hpp"
 #include "i2c.hpp"
 #include "adxl345.hpp"
-#include <WiFi.h>
 #include "wificredentials.hpp"
+#include "networkconfig.hpp"
 #include "as5600.hpp"
+#include "payload.hpp"
+
+#define micPin 25
+#define micsPin 26
 
 kl::I2C i2c;
 kl::BME280 bme280;
@@ -16,129 +21,56 @@ kl::AS5600 as5600;
 WiFiClient client;
 
 unsigned long lastMeasurementTime = 0;
-unsigned long as5600LastMSTime = 0;
-const unsigned long measurementInterval = 1000; // 1 sekunda
-const unsigned long as5600Interval = 20;
-
-IPAddress local_IP(192, 168, 137, 51);
-IPAddress gateway(192, 168, 137, 1);
-IPAddress subnet(255, 255, 255, 0);
-const int port = 50001;
-const char *host = "192.168.137.1";
-
-typedef struct SensorData
-{
-  float pressure;
-  float temperature;
-  float humidity;
-  int16_t ax, ay, az;
-  uint16_t eco2;
-  uint16_t tvoc;
-} SensorData;
+const unsigned long measurementInterval = 1000;
 
 SensorData sensorPayload;
 
 std::string fillPayload(bool, std::string);
+void configWIFI(int);
+void configSensors();
 
 void setup()
 {
   Serial.begin(115200);
-  WiFi.config(local_IP, gateway, subnet);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-  }
-  client.connect(host, port);
-
-  i2c.begin();
-  bme280.init();
-
-  if (!adxl345.begin())
-  {
-    fillPayload(false, "adxl begin error");
-  }
-  if (!adxl345.setRange(2))
-  {
-    fillPayload(false, "adxl set range error");
-  }
-
-  if (!as5600.begin())
-  {
-    fillPayload(false, "as5600 error");
-  }
-
-  bme280.makeMeasurement();
-  delay(100);
-  if (!sgp30.begin())
-  {
-    fillPayload(false, "sgp30 error");
-  }
-
-  sgp30.calibrateHumidity(float(bme280.getHum()) / 1024, float(bme280.getTemp()) / 100);
+  configWIFI(5);
+  configSensors();
 }
 
 void loop()
 {
-  static int i = 0;
-  unsigned long currentMillis = millis();
-  unsigned long currentMillisAS5600 = millis();
-
-  if (currentMillisAS5600 - as5600LastMSTime >= as5600Interval)
+  while (true)
   {
-    as5600LastMSTime = currentMillisAS5600;
-    uint8_t status = as5600.magnetStatus();
-    if (status == 0xFF)
-    {
-      Serial.println("I2C read error");
-    }
-    else
-    {
-      if (status & 0x20)
-      {
-        Serial.println("Magnet detected");
-        float angle = as5600.getAngleDegrees();
-        Serial.printf("Angle: %.2f deg\n", angle);
-      }
-      if (status & 0x10)
-      {
-        Serial.println("Magnet too weak");
-      }
-      if (status & 0x08)
-      {
-        Serial.println("Magnet too strong");
-      }
-    }
-  }
+    static int i = 0;
+    unsigned long currentMillis = millis();
 
-  if (currentMillis - lastMeasurementTime >= measurementInterval)
-  {
-    lastMeasurementTime = currentMillis;
-    bme280.makeMeasurement();
-    adxl345.measureAcceleration();
-    // dodac do sgp poprawke na wilgotnosc tak co minute
-    if (i >= 15)
+    if (currentMillis - lastMeasurementTime >= measurementInterval)
     {
-      sgp30.measureAQ();
-    }
-    i++;
-    sensorPayload.pressure = bme280.getPress();
-    sensorPayload.temperature = float(bme280.getTemp()) / 100;
-    sensorPayload.humidity = float(bme280.getHum()) / 1024;
-    sensorPayload.ax = adxl345.getX();
-    sensorPayload.ay = adxl345.getY();
-    sensorPayload.az = adxl345.getZ();
-    sensorPayload.eco2 = sgp30.getECO2();
-    sensorPayload.tvoc = sgp30.getTVOC();
+      lastMeasurementTime = currentMillis;
+      bme280.makeMeasurement();
+      adxl345.measureAcceleration();
+      // dodac do sgp poprawke na wilgotnosc tak co minute
+      if (i >= 15)
+      {
+        sgp30.measureAQ();
+      }
+      i++;
+      sensorPayload.pressure = bme280.getPress();
+      sensorPayload.temperature = float(bme280.getTemp()) / 100;
+      sensorPayload.humidity = float(bme280.getHum()) / 1024;
+      sensorPayload.ax = adxl345.getX();
+      sensorPayload.ay = adxl345.getY();
+      sensorPayload.az = adxl345.getZ();
+      sensorPayload.eco2 = sgp30.getECO2();
+      sensorPayload.tvoc = sgp30.getTVOC();
 
-    if (client.connected())
-    {
-      client.print(fillPayload(true, "none").c_str());
-    }
-    else
-    {
-      client.connect(host, port);
+      if (client.connected())
+      {
+        client.print(fillPayload(true, "none").c_str());
+      }
+      else
+      {
+        client.connect(host, port);
+      }
     }
   }
 }
@@ -168,4 +100,52 @@ std::string fillPayload(bool ok = true, std::string error = "none")
 
     return payload;
   }
+}
+
+void configWIFI(int reconnects)
+{
+  WiFi.config(local_IP, gateway, subnet);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (reconnects--)
+  {
+    delay(500);
+  }
+  client.connect(host, port);
+  if(WiFi.status() != WL_CONNECTED){
+    fillPayload(false, "WIFI could not connect");
+    throw std::runtime_error("WIFI connection error");
+  }
+}
+
+void configSensors()
+{
+
+  pinMode(micPin, INPUT);
+  pinMode(micsPin, INPUT);
+
+  i2c.begin();
+  bme280.init();
+
+  if (!adxl345.begin())
+  {
+    fillPayload(false, "adxl begin error");
+  }
+  if (!adxl345.setRange(2))
+  {
+    fillPayload(false, "adxl set range error");
+  }
+
+  if (!as5600.begin())
+  {
+    fillPayload(false, "as5600 error");
+  }
+
+  bme280.makeMeasurement();
+  delay(100);
+  if (!sgp30.begin())
+  {
+    fillPayload(false, "sgp30 error");
+  }
+
+  sgp30.calibrateHumidity(float(bme280.getHum()) / 1024, float(bme280.getTemp()) / 100);
 }
