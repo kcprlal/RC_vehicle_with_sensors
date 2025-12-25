@@ -10,6 +10,9 @@ kl::Esp32cam cam(20000000, PIXFORMAT_JPEG, FRAMESIZE_QVGA, 2, 15);
 
 WiFiUDP udp;
 
+#define LED_PIN 4
+#define CTRL_PIN 13
+
 void setup()
 {
   Serial.begin(115200);
@@ -22,10 +25,20 @@ void setup()
 
   cam.begin();
   udp.begin(udpPort);
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(CTRL_PIN, INPUT);
 }
 
 void loop()
 {
+  if (digitalRead(CTRL_PIN) == HIGH)
+  {
+    digitalWrite(LED_PIN, HIGH); // LED ON
+  }
+  else
+  {
+    digitalWrite(LED_PIN, LOW); // LED OFF
+  }
   camera_fb_t *fb = esp_camera_fb_get();
   if (!fb)
   {
@@ -53,4 +66,3 @@ void loop()
   esp_camera_fb_return(fb);
   delay(100);
 }
-

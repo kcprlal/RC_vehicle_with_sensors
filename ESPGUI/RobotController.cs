@@ -35,6 +35,12 @@ class RobotController
             await udpClient.SendAsync(lData, lData.Length, remoteEndPoint);
             return;
         }
+        if (button == 0x1000){
+            string cam = "10,10,10,10";
+            byte[] lData = Encoding.ASCII.GetBytes(cam);
+            await udpClient.SendAsync(lData, lData.Length, remoteEndPoint);
+            return;
+        }
         // Sprawdzamy martwą strefę joysticka
         if (RT < 10 && LT < 10)
         {

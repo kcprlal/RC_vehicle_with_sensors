@@ -10,6 +10,8 @@ typedef struct SensorData
     int16_t ax, ay, az;
     uint16_t eco2;
     uint16_t tvoc;
+    uint16_t soundlevel;
+    uint16_t co;
 } SensorData;
 
 #endif

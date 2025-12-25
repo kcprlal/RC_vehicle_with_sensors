@@ -11,23 +11,24 @@ namespace ESPGUI;
 public partial class Form1 : Form
 {
 
-    private System.Windows.Forms.Timer timer, snapshotTimer, controlTimer;
+    private System.Windows.Forms.Timer controlTimer;
     private Controller controller;
-    private bool isStopped = false;
-    private bool previousYPressed = false;
     private TcpListener server;
     private UI ui;
     public Form1()
     {
         InitializeComponent();
-        Width = 860;
+        Width = 1280;
         Height = 600;
+        ui = new UI();
         StartServer();
         controller = new Controller(UserIndex.One);
-        ui = new UI();
-        AddControllersToScreen();
 
-        BackColor = Color.Gray;
+        ui.Log("Initializing server...");
+        //AddControllersToScreen();
+
+        Controls.Add(ui.Root);
+        BackColor = Color.Black;
 
         //timer odpowiedzialny za sterowanie padem
         controlTimer = new System.Windows.Forms.Timer();
@@ -35,24 +36,12 @@ public partial class Form1 : Form
         controlTimer.Tick += ControlTimer_Tick;
         controlTimer.Start();
 
-        //_ = GetDataFromHttp(espSensorURL);
-        //StartCameraUdp(12345);
         var receiver = new UdpReceiver(1234, ui.PictureBoxCam);
     }
 
     //streaming
 
     private CancellationTokenSource _cancellationTokenSource;
-
-    private void buttonStart_Click(object sender, EventArgs e)
-    {
-        StartCameraUdp(12345);
-    }
-
-    private void buttonStop_Click(object sender, EventArgs e)
-    {
-        StopCameraUdp();
-    }
 
     private void StartCameraUdp(int port)
     {
@@ -123,12 +112,12 @@ public partial class Form1 : Form
             }
             catch (SocketException ex)
             {
-                Log("Socket error: " + ex.Message);
+                ui.Log("Socket error: " + ex.Message);
                 udpClient.Close();
             }
             catch (Exception ex)
             {
-                Log("udp error: " + ex.Message);
+                ui.Log("udp error: " + ex.Message);
                 udpClient.Close();
             }
         }
@@ -153,19 +142,19 @@ public partial class Form1 : Form
     {
         server = new TcpListener(IPAddress.Any, 50001);
         server.Start();
-        Log("Serwer uruchomiony...");
+        ui.Log("Server initialized...");
 
         while (true)
         {
             try
             {
                 var client = await server.AcceptTcpClientAsync();
-                Log("Połączono z ESP: " + client.Client.RemoteEndPoint);
+                ui.Log("Connected to ESP: " + client.Client.RemoteEndPoint);
                 _ = HandleClient(client); // działa w tle
             }
             catch (Exception ex)
             {
-                Log("Błąd serwera: " + ex.Message);
+                ui.Log("Server error: " + ex.Message);
             }
         }
     });
@@ -185,46 +174,28 @@ public partial class Form1 : Form
                 var data = JsonSerializer.Deserialize<EspData>(line);
                 _ = Invoke((MethodInvoker)(() =>
                 {
-                    ui.LabelTemp.Text = $"Temperature: {data.temperature} °C";
-                    ui.LabelPress.Text = $"Pressure: {data.pressure} hPa";
-                    ui.LabelHum.Text = $"Humidity: {data.humidity} %";
-                    ui.LabelEco2.Text = $"ECO2: {data.eco2} ppm";
-                    ui.Labeltvoc.Text = $"TVOC: {data.tvoc} ppm";
-                    ui.Labelxyz.Text = $"x: {data.ax}, y: {data.ay}, z: {data.az}";
-                    //
+                    ui.UpdateTemperature(data.temperature);
+                    ui.UpdatePressure(data.pressure);
+                    ui.UpdateHumidity(data.humidity);
+                    ui.UpdateEco2(data.eco2);
+                    ui.UpdateTvoc(data.tvoc);
+                    ui.UpdateXyz(data.ax, data.ay, data.az);
+                    ui.UpdateCo(data.co);
+                    if (ui.SoundChart.InvokeRequired)
+                    {
+                        ui.SoundChart.BeginInvoke(() => ui.SoundChart.AddSample(data.sound));
+                    }
+                    else
+                    {
+                        ui.SoundChart.AddSample(data.sound);
+                        ui.Log($"received sound level: {data.sound}");
+                    }
                 }));
             }
             catch (Exception ex)
             {
-                Log("TCP error");
+                ui.Log("TCP error");
             }
         }
     }
-
-    public void Log(string message)
-    {
-        if (ui.Logbox.InvokeRequired)
-        {
-            ui.Logbox.Invoke(new Action(() => Log(message)));
-        }
-        else
-        {
-            ui.Logbox.AppendText($"{DateTime.Now:HH:mm:ss}  {message}{Environment.NewLine}");
-        }
-    }
-
-    public void AddControllersToScreen()
-    {
-        Controls.Add(ui.PictureBoxCam);
-        //Controls.Add(ui.ButtonStart);
-        //Controls.Add(ui.ButtonStop);
-        Controls.Add(ui.LabelTemp);
-        Controls.Add(ui.LabelPress);
-        Controls.Add(ui.LabelHum);
-        Controls.Add(ui.LabelEco2);
-        Controls.Add(ui.Labeltvoc);
-        Controls.Add(ui.Labelxyz);
-        Controls.Add(ui.Logbox);
-    }
-
 }
