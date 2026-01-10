@@ -9,12 +9,14 @@ namespace kl
     {
     public:
         ADXL345();
-        bool begin();
+        void begin();
         bool measureAcceleration();
         bool setRange(uint8_t);
         int16_t getX() { return x; };
         int16_t getY() { return y; };
         int16_t getZ() { return z; };
+        void set_notfunctional() { functional = false; };
+        bool get_status() { return functional; };
 
     private:
         int16_t x, y, z;
@@ -27,6 +29,8 @@ namespace kl
         static constexpr uint8_t POWER_CTL = 0x2d;
         static constexpr uint8_t DATA_FORMAT = 0x31;
         static constexpr uint8_t DATA_X0 = 0x32;
+
+        bool functional = true;
     };
 }
 #endif

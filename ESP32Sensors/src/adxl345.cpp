@@ -7,9 +7,9 @@ extern kl::I2C i2c;
 namespace kl
 {
     ADXL345::ADXL345() {}
-    bool ADXL345::begin()
+    void ADXL345::begin()
     {
-        return writeRegister(POWER_CTL, 0x08);
+        writeRegister(POWER_CTL, 0x08);
     }
 
     bool ADXL345::setRange(uint8_t range)

@@ -181,15 +181,8 @@ public partial class Form1 : Form
                     ui.UpdateTvoc(data.tvoc);
                     ui.UpdateXyz(data.ax, data.ay, data.az);
                     ui.UpdateCo(data.co);
-                    if (ui.SoundChart.InvokeRequired)
-                    {
-                        ui.SoundChart.BeginInvoke(() => ui.SoundChart.AddSample(data.sound));
-                    }
-                    else
-                    {
-                        ui.SoundChart.AddSample(data.sound);
-                        ui.Log($"received sound level: {data.sound}");
-                    }
+                    ui.SoundChart.AddSample(data.sound);
+                    ui.Log($"received sound level: {data.sound}");
                 }));
             }
             catch (Exception ex)

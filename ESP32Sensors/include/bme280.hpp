@@ -13,6 +13,8 @@ namespace kl
         uint32_t getPress() { return press; };
         int32_t getTemp() { return temp; };
         uint32_t getHum() { return hum; };
+        void set_notfunctional() { functional = false; };
+        bool get_status() { return functional; };
 
     private:
         // Kalibracje
@@ -73,6 +75,8 @@ namespace kl
         bool readRegister(uint8_t, uint8_t *);
         bool writeRegister(uint8_t, uint8_t);
         bool readRegisters(uint8_t, uint8_t *, uint8_t);
+
+        bool functional = true;
     };
 }
 #endif

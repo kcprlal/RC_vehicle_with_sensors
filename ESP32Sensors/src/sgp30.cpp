@@ -17,12 +17,10 @@ namespace kl
         setHumidity();
     }
 
-    bool SGP30::begin()
+    void SGP30::begin()
     {
-        if (!writeCommand(IAQ_INIT))
-            return false;
+        writeCommand(IAQ_INIT);
         delay(10);
-        return true;
     }
 
     bool SGP30::measureAQ()

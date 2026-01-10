@@ -39,8 +39,6 @@ namespace kl
         if (err != ESP_OK)
         {
             return false;
-            // tu dodac error handling
-            // zmienie cala funckje na uint8_t i bedzie zwracac lcizbe
         }
         return true;
     }
@@ -56,7 +54,6 @@ namespace kl
         esp_err_t err = i2c_master_cmd_begin(_i2c_num, cmd, pdMS_TO_TICKS(1000));
         i2c_cmd_link_delete(cmd);
         return err == ESP_OK;
-        // tutaj te moze dodam jakis error handling
     }
     // dla bme280
     bool I2C::read(uint8_t dest_addr, uint8_t reg_addr, uint8_t *data)
@@ -74,7 +71,7 @@ namespace kl
 
         if (ret != ESP_OK)
         {
-            return false; // error handling
+            return false; 
         }
         return true;
     }

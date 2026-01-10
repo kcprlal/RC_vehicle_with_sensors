@@ -49,33 +49,70 @@ void loop()
     if (currentMillis - lastMeasurementTime >= measurementInterval)
     {
       lastMeasurementTime = currentMillis;
-      bme280.makeMeasurement();
-      adxl345.measureAcceleration();
-      // dodac do sgp poprawke na wilgotnosc tak co minute
+      if (bme280.get_status())
+        bme280.makeMeasurement();
+      if (adxl345.get_status())
+        adxl345.measureAcceleration();
+
       if (i >= 15)
       {
-        sgp30.measureAQ();
+        if (sgp30.get_status())
+          sgp30.measureAQ();
       }
       i++;
-      sensorPayload.pressure = bme280.getPress();
-      sensorPayload.temperature = float(bme280.getTemp()) / 100;
-      sensorPayload.humidity = 65.41; // float(bme280.getHum()) / 1024;
-      sensorPayload.ax = adxl345.getX();
-      sensorPayload.ay = adxl345.getY();
-      sensorPayload.az = adxl345.getZ();
-      sensorPayload.eco2 = sgp30.getECO2();
-      sensorPayload.tvoc = sgp30.getTVOC();
+
+      if (bme280.get_status())
+      {
+        sensorPayload.pressure = bme280.getPress();
+        sensorPayload.temperature = float(bme280.getTemp()) / 100;
+        sensorPayload.humidity = float(bme280.getHum()) / 1024;
+      }
+      else
+      {
+        sensorPayload.pressure = 0;
+        sensorPayload.temperature = 0;
+        sensorPayload.humidity = 0;
+      }
+
+      if (adxl345.get_status())
+      {
+        sensorPayload.ax = adxl345.getX();
+        sensorPayload.ay = adxl345.getY();
+        sensorPayload.az = adxl345.getZ();
+      }
+      else
+      {
+        sensorPayload.ax = 0;
+        sensorPayload.ay = 0;
+        sensorPayload.az = 0;
+      }
+
+      if (sgp30.get_status())
+      {
+        sensorPayload.eco2 = sgp30.getECO2();
+        sensorPayload.tvoc = sgp30.getTVOC();
+      }
+      else
+      {
+        sensorPayload.eco2 = 0;
+        sensorPayload.tvoc = 0;
+      }
+
       sensorPayload.soundlevel = analogRead(micPin);
       sensorPayload.co = 2000;
 
       if (i >= 60)
       {
         sensorPayload.co = analogRead(micsPin);
-        Serial.println(sensorPayload.co);
+        // Serial.println(sensorPayload.co);
       }
       if (i % 60 == 0)
       {
-        sgp30.calibrateHumidity(sensorPayload.humidity, sensorPayload.temperature);
+        if (bme280.get_status() && sgp30.get_status())
+          sgp30.calibrateHumidity(sensorPayload.humidity, sensorPayload.temperature);
+        // w przypadku błędu bme280 ustaw wartości deafaultowe
+        if (!bme280.get_status() && sgp30.get_status())
+          sgp30.calibrateHumidity(60, 25);
       }
       if (client.connected())
       {
@@ -149,9 +186,14 @@ void configSensors()
   digitalWrite(micsEN, LOW);
 
   i2c.begin();
-  bme280.init();
+  i2c.ping(0x76) ? bme280.init() : bme280.set_notfunctional();
+  if (!bme280.get_status())
+  {
+    fillPayload(false, "bme280 init error");
+  }
 
-  if (!adxl345.begin())
+  i2c.ping(0x36) ? adxl345.begin() : adxl345.set_notfunctional();
+  if (!adxl345.get_status())
   {
     fillPayload(false, "adxl begin error");
   }
@@ -160,12 +202,19 @@ void configSensors()
     fillPayload(false, "adxl set range error");
   }
 
-  bme280.makeMeasurement();
+  if (bme280.get_status())
+    bme280.makeMeasurement();
   delay(100);
-  if (!sgp30.begin())
+
+  i2c.ping(0x58) ? sgp30.begin() : sgp30.set_notfunctional();
+  if (!sgp30.get_status())
   {
     fillPayload(false, "sgp30 error");
   }
 
-  sgp30.calibrateHumidity(/*float(bme280.getHum()) / 1024*/ 65.41, float(bme280.getTemp()) / 100);
+  if (bme280.get_status() && sgp30.get_status())
+    sgp30.calibrateHumidity(float(bme280.getHum()) / 1024, float(bme280.getTemp()) / 100);
+  // w przypadku błędu bme280 ustaw wartości deafaultowe
+  if (!bme280.get_status() && sgp30.get_status())
+    sgp30.calibrateHumidity(60, 25);
 }

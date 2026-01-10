@@ -16,7 +16,6 @@ public class UI
     // public Button ButtonStop { get; private set; }
     public TextBox LogBox { get; private set; }
 
-    // GŁÓWNY KONTENER – to dodajesz do Form
     public Control Root { get; private set; }
 
     private readonly Font labelFont = new Font("Segoe UI", 10);

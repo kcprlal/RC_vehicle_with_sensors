@@ -11,11 +11,13 @@ namespace kl
     public:
         SGP30();
         void calibrateHumidity(float, float);
-        bool begin();
+        void begin();
         bool measureAQ();
         bool setHumidity();
         uint16_t getECO2() { return eCO2; }
         uint16_t getTVOC() { return TVOC; }
+        void set_notfunctional() { functional = false; };
+        bool get_status() { return functional; };
 
     private:
         uint16_t absoluteHumidity, eCO2, TVOC;
@@ -23,7 +25,7 @@ namespace kl
         bool readData(uint8_t *, uint8_t, uint8_t *, uint8_t);
         uint8_t genCRC(const uint8_t *, uint8_t);
         bool checkCRC(const uint8_t *, uint8_t);
-
+        bool functional = true;
         // stałe adresy rejestrów
 
         static constexpr uint8_t ADDRESS = 0x58;
