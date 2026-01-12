@@ -170,7 +170,7 @@ public partial class Form1 : Form
             if (line == null) break;
             try
             {
-
+                ui.Log(line);
                 var data = JsonSerializer.Deserialize<EspData>(line);
                 _ = Invoke((MethodInvoker)(() =>
                 {
@@ -182,7 +182,6 @@ public partial class Form1 : Form
                     ui.UpdateXyz(data.ax, data.ay, data.az);
                     ui.UpdateCo(data.co);
                     ui.SoundChart.AddSample(data.sound);
-                    ui.Log($"received sound level: {data.sound}");
                 }));
             }
             catch (Exception ex)
