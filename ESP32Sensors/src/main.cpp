@@ -66,7 +66,7 @@ void loop()
       {
         sensorPayload.pressure = bme280.getPress();
         sensorPayload.temperature = float(bme280.getTemp()) / 100;
-        sensorPayload.humidity = 64;
+        sensorPayload.humidity = float(bme280.getHum()) / 1024;
       }
       else
       {
@@ -214,7 +214,7 @@ void configSensors()
   }
 
   if (bme280.get_status() && sgp30.get_status())
-    sgp30.calibrateHumidity(64, float(bme280.getTemp()) / 100);
+    sgp30.calibrateHumidity(float(bme280.getHum()) / 1024, float(bme280.getTemp()) / 100);
   // w przypadku błędu bme280 ustaw wartości deafaultowe
   if (!bme280.get_status() && sgp30.get_status())
     sgp30.calibrateHumidity(60, 25);
